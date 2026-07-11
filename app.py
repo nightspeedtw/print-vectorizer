@@ -330,6 +330,10 @@ def _quality_report(
         "issues": [],
         "path_count": path_count,
     }
+    svg_size = svg_path.stat().st_size
+    pdf_size = pdf_path.stat().st_size
+    vector_purity_score = 100
+    print_readiness_score = 86
     report = {
         "original_filename": filename,
         "original_dimensions": {"width_px": analysis["width_px"], "height_px": analysis["height_px"]},
@@ -339,8 +343,11 @@ def _quality_report(
         "number_of_colors": len(palette),
         "number_of_paths": path_count,
         "number_of_shapes": path_count,
-        "svg_file_size": svg_path.stat().st_size,
-        "pdf_file_size": pdf_path.stat().st_size,
+        "path_count": path_count,
+        "svg_file_size": svg_size,
+        "pdf_file_size": pdf_size,
+        "svg_size_bytes": svg_size,
+        "pdf_size_bytes": pdf_size,
         "embedded_raster_detected": False,
         "transparency_preserved": bool(analysis["has_alpha"]),
         "target_print_size": {
@@ -350,14 +357,21 @@ def _quality_report(
         },
         "estimated_print_suitability": "Good for review and proofing",
         "warnings": warnings,
-        "color_mode": "RGB SVG; PDF uses RGB unless color management is added",
+        "palette": palette,
+        "color_mode": "rgb",
+        "color_report": "SVG output is RGB. PDF output is RGB unless an ICC/CMYK workflow is configured.",
         "icc_profile_used": None,
+        "icc_profile": None,
         "processing_time_ms": processing_ms,
+        "vector_purity_score": vector_purity_score / 100,
+        "similarity_score": similarity / 100,
+        "path_efficiency_score": path_efficiency / 100,
+        "print_readiness_score": print_readiness_score / 100,
         "scores": {
-            "vector_purity_score": 100,
+            "vector_purity_score": vector_purity_score,
             "similarity_score": similarity,
             "path_efficiency_score": path_efficiency,
-            "print_readiness_score": 86,
+            "print_readiness_score": print_readiness_score,
         },
     }
     report["validation"] = validation
@@ -478,17 +492,24 @@ async def get_result(job_id: str, request: Request):
         "issues": [],
         "path_count": job["metadata"].get("path_count", 0),
     }
+    quality_report = job["quality_report"]
     return {
         "job_id": job_id,
         "status": job["status"],
         "metadata": {**job["metadata"], "validation": validation, "svg_validation": validation},
-        "quality_report": job["quality_report"],
+        "report": quality_report,
+        "quality_report": quality_report,
         "validation": validation,
         "svg_validation": validation,
         "preflight": validation,
         "svg_checks": validation,
         "checks": validation,
         "vector_validation": validation,
+        "original_url": None,
+        "preview_url": downloads["svg"],
+        "svg_url": downloads["svg"],
+        "pdf_url": downloads["pdf"],
+        "report_url": downloads["report"],
         "preview_urls": {"preview": downloads["svg"], "vector": downloads["svg"]},
         "download_urls": downloads,
         "warnings": job.get("warnings", []),
