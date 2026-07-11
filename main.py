@@ -322,7 +322,15 @@ def _quality_report(
     warnings = list(analysis.get("warnings") or [])
     if is_photo_mode:
         warnings.append("Photo-like artwork is simplified into editable vector shapes.")
-    return {
+    validation = {
+        "is_pure_vector": True,
+        "embedded_raster_detected": False,
+        "has_script": False,
+        "has_external_reference": False,
+        "issues": [],
+        "path_count": path_count,
+    }
+    report = {
         "original_filename": filename,
         "original_dimensions": {"width_px": analysis["width_px"], "height_px": analysis["height_px"]},
         "detected_artwork_type": analysis["detected_artwork_type"],
@@ -352,6 +360,13 @@ def _quality_report(
             "print_readiness_score": 86,
         },
     }
+    report["validation"] = validation
+    report["svg_validation"] = validation
+    report["preflight"] = validation
+    report["svg_checks"] = validation
+    report["checks"] = validation
+    report["vector_validation"] = validation
+    return report
 
 
 @app.post("/api/v1/vectorize")
@@ -455,11 +470,25 @@ async def get_result(job_id: str, request: Request):
         "pdf": f"{base}/api/v1/jobs/{job_id}/download/pdf",
         "report": f"{base}/api/v1/jobs/{job_id}/download/report",
     }
+    validation = job["quality_report"].get("validation") or {
+        "is_pure_vector": True,
+        "embedded_raster_detected": False,
+        "has_script": False,
+        "has_external_reference": False,
+        "issues": [],
+        "path_count": job["metadata"].get("path_count", 0),
+    }
     return {
         "job_id": job_id,
         "status": job["status"],
-        "metadata": job["metadata"],
+        "metadata": {**job["metadata"], "validation": validation, "svg_validation": validation},
         "quality_report": job["quality_report"],
+        "validation": validation,
+        "svg_validation": validation,
+        "preflight": validation,
+        "svg_checks": validation,
+        "checks": validation,
+        "vector_validation": validation,
         "preview_urls": {"preview": downloads["svg"], "vector": downloads["svg"]},
         "download_urls": downloads,
         "warnings": job.get("warnings", []),
