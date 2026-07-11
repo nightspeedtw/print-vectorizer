@@ -599,8 +599,27 @@ async def validate_svg_endpoint(request: Request, file: UploadFile | None = File
         try:
             payload = json.loads(raw.decode("utf-8"))
             content = payload.get("svg") or payload.get("svg_text") or ""
+            svg_url = payload.get("svg_url") or payload.get("url")
+            if not content and svg_url:
+                match = re.search(r"/api/v1/jobs/([^/]+)/download/(svg|preview)(?:\\?|$)", str(svg_url))
+                if not match:
+                    raise HTTPException(status_code=422, detail="Only generated job SVG URLs can be validated.")
+                job = JOBS.get(match.group(1))
+                if not job:
+                    raise HTTPException(status_code=404, detail="Job not found for SVG validation.")
+                content = (Path(job["dir"]) / "result.svg").read_text(encoding="utf-8")
+        except HTTPException:
+            raise
         except Exception:
             content = raw.decode("utf-8", errors="replace")
+            if content.strip().startswith("http"):
+                match = re.search(r"/api/v1/jobs/([^/]+)/download/(svg|preview)(?:\\?|$)", content)
+                if not match:
+                    raise HTTPException(status_code=422, detail="Only generated job SVG URLs can be validated.")
+                job = JOBS.get(match.group(1))
+                if not job:
+                    raise HTTPException(status_code=404, detail="Job not found for SVG validation.")
+                content = (Path(job["dir"]) / "result.svg").read_text(encoding="utf-8")
     return _validate_svg_text(content)
 
 
