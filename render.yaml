@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: print-vectorizer-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SERVICE_NAME
+        value: print-vectorizer
+      - key: ALLOWED_ORIGINS
+        value: https://id-preview--016b68d8-fed4-4542-9369-1e54676aa902.lovable.app,https://print-vector-spark.lovable.app,http://localhost:5173,http://localhost:3000
+      - key: MAX_UPLOAD_MB
+        value: "50"
+      - key: FILE_RETENTION_HOURS
+        value: "24"
+      - key: STORAGE_DIR
+        value: /tmp/print-vectorizer
+      - key: API_KEY
+        value: ""
