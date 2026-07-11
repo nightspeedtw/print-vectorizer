@@ -56,8 +56,18 @@ def _require_api_key(request: Request) -> None:
         raise HTTPException(status_code=401, detail="Invalid API key.")
 
 
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": SERVICE_NAME}
+
+
 @app.get("/health")
 async def health():
+    return {"status": "ok", "service": SERVICE_NAME}
+
+
+@app.get("/api/health")
+async def api_health():
     return {"status": "ok", "service": SERVICE_NAME}
 
 
