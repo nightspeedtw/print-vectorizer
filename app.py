@@ -30,10 +30,22 @@ ALLOWED_ORIGINS = [
         "ALLOWED_ORIGINS",
         "https://id-preview--016b68d8-fed4-4542-9369-1e54676aa902.lovable.app,"
         "https://print-vector-spark.lovable.app,"
+        "https://snapvector.co,"
+        "https://www.snapvector.co,"
         "http://localhost:5173,http://localhost:3000",
     ).split(",")
     if origin.strip()
 ]
+ALLOWED_ORIGINS = sorted(
+    set(
+        ALLOWED_ORIGINS
+        + [
+            "https://print-vector-spark.lovable.app",
+            "https://snapvector.co",
+            "https://www.snapvector.co",
+        ]
+    )
+)
 
 JOBS: dict[str, dict[str, Any]] = {}
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
